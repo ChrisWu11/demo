@@ -5,7 +5,6 @@ import ContentItem from "../../components/ContentItem";
 import "./index.scss";
 import { List } from "./list";
 
-
 class Index extends Component {
   constructor(props) {
     super(props);
@@ -20,40 +19,42 @@ class Index extends Component {
 
   componentDidMount() {
     this.getList();
-
   }
 
   getList = async () => {
     const { pageNum, itemLists } = this.state;
     Taro.showLoading();
-    let list = await List.slice((pageNum-1)*10,pageNum*10);
+    let list = await List.slice((pageNum - 1) * 10, pageNum * 10);
 
     Taro.hideLoading();
     const { lists } = itemLists;
 
-      if (
-        list &&
-        list.length == 0 &&
-        lists.left.length !== 0 &&
-        lists.right.length !== 0
-      ) {
-        Taro.showToast({
-          title: "没有更多内容了",
-          icon: "none",
-        });
-        return;
-      }
-      const tempList = this.handleList(
-        pageNum == 1
-          ? { lists: { left: [], right: [] }, left: 0, right: 0 }
-          : itemLists,
-        list
-      );
-      this.setState({
-        itemLists: tempList,
-        pageNum: pageNum + 1,
+    list.forEach((item) => {
+      this.cacheImage(item);
+    });
+
+    if (
+      list &&
+      list.length == 0 &&
+      lists.left.length !== 0 &&
+      lists.right.length !== 0
+    ) {
+      Taro.showToast({
+        title: "没有更多内容了",
+        icon: "none",
       });
-    
+      return;
+    }
+    const tempList = this.handleList(
+      pageNum == 1
+        ? { lists: { left: [], right: [] }, left: 0, right: 0 }
+        : itemLists,
+      list
+    );
+    this.setState({
+      itemLists: tempList,
+      pageNum: pageNum + 1,
+    });
   };
 
   getNew = async () => {
@@ -75,9 +76,9 @@ class Index extends Component {
   };
 
   handleList = (target, obj) => {
-    for(let i = 0;i < obj.length;i += 2){
+    for (let i = 0; i < obj.length; i += 2) {
       target.lists.left.push(obj[i]);
-      i+1 < obj.length && target.lists.right.push(obj[i+1]);
+      i + 1 < obj.length && target.lists.right.push(obj[i + 1]);
     }
     return target;
   };
@@ -86,32 +87,34 @@ class Index extends Component {
     this.getList();
   };
 
-  getSearchText = (e) => {
-    
+
+  // 预先缓存图片
+  cacheImage = async (item) => {
+    Taro.downloadFile({
+      url: item.imgs[0],
+      success: (res) => {
+        // 缓存成功后将图片路径保存到本地存储
+        Taro.setStorageSync(`image_${item.id}`, res.tempFilePath);
+        console.log('cache success')
+      },
+      fail: (error) => {
+        console.error("Failed to cache image:", error);
+      },
+    });
   };
 
-  searchText = async () => {
+  handleClick = (item) => () => {
+    // 预先缓存图片
+    // this.cacheImage(item);
 
+    Taro.navigateTo({ url: `/pages/Detail/index?id=${item.id}` });
   };
-
-
 
   render() {
     const { itemLists, searchText, refresherTriggered } = this.state;
     const { lists } = itemLists;
     return (
       <View className="container">
-        <View className="search">
-          <Input
-            className="search_input"
-            placeholder="大家都在搜xxx"
-            value={searchText}
-            onInput={this.getSearchText}
-          ></Input>
-          <Text className="search_btn" onClick={this.searchText}>
-            搜索
-          </Text>
-        </View>
         <ScrollView
           className="container-scroll"
           scrollY
@@ -129,8 +132,12 @@ class Index extends Component {
             <View className="wrapper_column">
               {lists?.left?.map((item, index) => {
                 return (
-                  <View className="column_item" key={index}>
-                    <ContentItem detail={item} ></ContentItem>
+                  <View
+                    className="column_item"
+                    key={index}
+                    onClick={this.handleClick(item)}
+                  >
+                    <ContentItem detail={item}></ContentItem>
                   </View>
                 );
               })}
@@ -138,8 +145,12 @@ class Index extends Component {
             <View className="wrapper_column">
               {lists?.right?.map((item, index) => {
                 return (
-                  <View className="column_item" key={index}>
-                    <ContentItem detail={item} ></ContentItem>
+                  <View
+                    className="column_item"
+                    key={index}
+                    onClick={this.handleClick(item)}
+                  >
+                    <ContentItem detail={item}></ContentItem>
                   </View>
                 );
               })}

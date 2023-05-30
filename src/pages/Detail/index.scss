@@ -1,0 +1,34 @@
+.Detail {
+  .container-scroll {
+    height: calc(100vh - 2px);
+    width: 100%;
+    // padding: 0px 20px 0 20px;
+    box-sizing: border-box;
+    .cachedImg {
+      width: 100%;
+      height: 300px;
+    }
+    .content {
+      box-sizing: border-box;
+      padding: 0 20px;
+    }
+    .skeleton {
+      width: 100%;
+      height: 800px; /* 设置骨架屏的高度 */
+      background-color: #f0f0f0; /* 设置骨架屏的背景色 */
+      animation: skeletonLoading 1s infinite; /* 设置骨架屏的动画效果 */
+    }
+
+    @keyframes skeletonLoading {
+      0% {
+        opacity: 0.6; /* 初始透明度 */
+      }
+      50% {
+        opacity: 0.8; /* 中间透明度 */
+      }
+      100% {
+        opacity: 0.6; /* 结束透明度 */
+      }
+    }
+  }
+}
